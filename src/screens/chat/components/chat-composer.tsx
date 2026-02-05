@@ -10,6 +10,8 @@ import {
   PromptInputTextarea,
 } from '@/components/prompt-kit/prompt-input'
 import { Button } from '@/components/ui/button'
+import { AttachmentButton, type AttachmentFile } from '@/components/attachment-button'
+import { AttachmentPreviewList } from '@/components/attachment-preview'
 
 type ChatComposerProps = {
   onSubmit: (value: string, helpers: ChatComposerHelpers) => void
@@ -21,6 +23,7 @@ type ChatComposerProps = {
 type ChatComposerHelpers = {
   reset: () => void
   setValue: (value: string) => void
+  attachments?: AttachmentFile[]
 }
 
 function ChatComposerComponent({
@@ -30,6 +33,7 @@ function ChatComposerComponent({
   wrapperRef,
 }: ChatComposerProps) {
   const [value, setValue] = useState('')
+  const [attachments, setAttachments] = useState<AttachmentFile[]>([])
   const promptRef = useRef<HTMLTextAreaElement | null>(null)
   const focusPrompt = useCallback(() => {
     if (typeof window === 'undefined') return
@@ -39,8 +43,15 @@ function ChatComposerComponent({
   }, [])
   const reset = useCallback(() => {
     setValue('')
+    setAttachments([])
     focusPrompt()
   }, [focusPrompt])
+  const handleFileSelect = useCallback((file: AttachmentFile) => {
+    setAttachments((prev) => [...prev, file])
+  }, [])
+  const handleRemoveAttachment = useCallback((id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id))
+  }, [])
   const setComposerValue = useCallback(
     (nextValue: string) => {
       setValue(nextValue)
@@ -51,11 +62,14 @@ function ChatComposerComponent({
   const handleSubmit = useCallback(() => {
     if (disabled) return
     const body = value.trim()
-    if (body.length === 0) return
-    onSubmit(body, { reset, setValue: setComposerValue })
+    // Allow submit if there's text OR valid attachments
+    const validAttachments = attachments.filter((a) => !a.error && a.base64)
+    if (body.length === 0 && validAttachments.length === 0) return
+    onSubmit(body, { reset, setValue: setComposerValue, attachments: validAttachments })
     focusPrompt()
-  }, [disabled, focusPrompt, onSubmit, reset, setComposerValue, value])
-  const submitDisabled = disabled || value.trim().length === 0
+  }, [disabled, focusPrompt, onSubmit, reset, setComposerValue, value, attachments])
+  const validAttachments = attachments.filter((a) => !a.error && a.base64)
+  const submitDisabled = disabled || (value.trim().length === 0 && validAttachments.length === 0)
 
   return (
     <div
@@ -69,22 +83,34 @@ function ChatComposerComponent({
         isLoading={isLoading}
         disabled={disabled}
       >
+        <AttachmentPreviewList
+          attachments={attachments}
+          onRemove={handleRemoveAttachment}
+        />
         <PromptInputTextarea
           placeholder="Type a message…"
           inputRef={promptRef}
         />
         <PromptInputActions className="justify-end px-3">
-          <PromptInputAction tooltip="Send message">
-            <Button
-              onClick={handleSubmit}
-              disabled={submitDisabled}
-              size="icon-sm"
-              className="rounded-full"
-              aria-label="Send message"
-            >
-              <HugeiconsIcon icon={ArrowUp02Icon} size={18} strokeWidth={2} />
-            </Button>
-          </PromptInputAction>
+          <div className="flex items-center gap-1">
+            <PromptInputAction tooltip="Attach image">
+              <AttachmentButton
+                onFileSelect={handleFileSelect}
+                disabled={disabled}
+              />
+            </PromptInputAction>
+            <PromptInputAction tooltip="Send message">
+              <Button
+                onClick={handleSubmit}
+                disabled={submitDisabled}
+                size="icon-sm"
+                className="rounded-full"
+                aria-label="Send message"
+              >
+                <HugeiconsIcon icon={ArrowUp02Icon} size={18} strokeWidth={2} />
+              </Button>
+            </PromptInputAction>
+          </div>
         </PromptInputActions>
       </PromptInput>
     </div>
