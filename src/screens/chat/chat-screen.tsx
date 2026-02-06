@@ -28,6 +28,7 @@ import {
 import { chatUiQueryKey, getChatUiState, setChatUiState } from './chat-ui'
 import { ChatSidebar } from './components/chat-sidebar'
 import { ChatHeader } from './components/chat-header'
+import { useExport } from '@/hooks/use-export'
 import { ChatMessageList } from './components/chat-message-list'
 import { ChatComposer } from './components/chat-composer'
 import { GatewayStatusMessage } from './components/gateway-status-message'
@@ -110,6 +111,12 @@ export function ChatScreen({
     activeExists,
     sessionsReady: sessionsQuery.isSuccess,
     queryClient,
+  })
+
+  const { exportConversation } = useExport({
+    currentFriendlyId: activeFriendlyId,
+    currentSessionKey: sessionKeyForHistory,
+    sessionTitle: activeTitle,
   })
 
   const uiQuery = useQuery({
@@ -608,6 +615,8 @@ export function ChatScreen({
             wrapperRef={headerRef}
             showSidebarButton={isMobile}
             onOpenSidebar={handleOpenSidebar}
+            onExport={exportConversation}
+            hasMessages={displayMessages.length > 0}
           />
 
           {hideUi ? null : (

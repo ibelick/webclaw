@@ -2,12 +2,17 @@ import { memo } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon } from '@hugeicons/core-free-icons'
 import { Button } from '@/components/ui/button'
+import { ExportMenu } from '@/components/export-menu'
+
+type ExportFormat = 'markdown' | 'json' | 'text'
 
 type ChatHeaderProps = {
   activeTitle: string
   wrapperRef?: React.Ref<HTMLDivElement>
   showSidebarButton?: boolean
   onOpenSidebar?: () => void
+  onExport?: (format: ExportFormat) => void
+  hasMessages?: boolean
 }
 
 function ChatHeaderComponent({
@@ -15,6 +20,8 @@ function ChatHeaderComponent({
   wrapperRef,
   showSidebarButton = false,
   onOpenSidebar,
+  onExport,
+  hasMessages = false,
 }: ChatHeaderProps) {
   return (
     <div
@@ -32,7 +39,10 @@ function ChatHeaderComponent({
           <HugeiconsIcon icon={Menu01Icon} size={18} strokeWidth={1.6} />
         </Button>
       ) : null}
-      <div className="text-sm font-medium truncate">{activeTitle}</div>
+      <div className="text-sm font-medium truncate flex-1">{activeTitle}</div>
+      {onExport && hasMessages ? (
+        <ExportMenu onExport={onExport} />
+      ) : null}
     </div>
   )
 }
