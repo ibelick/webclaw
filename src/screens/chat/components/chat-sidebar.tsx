@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   PencilEdit02Icon,
+  Search01Icon,
   Settings01Icon,
   SidebarLeft01Icon,
 } from '@hugeicons/core-free-icons'
@@ -30,6 +31,7 @@ type ChatSidebarProps = {
   activeFriendlyId: string
   creatingSession: boolean
   onCreateSession: () => void
+  onOpenSearch?: () => void
   isCollapsed: boolean
   onToggleCollapse: () => void
   onSelectSession?: () => void
@@ -41,6 +43,7 @@ function ChatSidebarComponent({
   activeFriendlyId,
   creatingSession,
   onCreateSession,
+  onOpenSearch,
   isCollapsed,
   onToggleCollapse,
   onSelectSession,
@@ -114,6 +117,12 @@ function ChatSidebarComponent({
     setDeleteFriendlyId(null)
   }
 
+  function handleOpenSearch() {
+    if (!onOpenSearch) return
+    onOpenSearch()
+    if (onSelectSession) onSelectSession()
+  }
+
   const asideProps = {
     className:
       'border-r border-primary-200 h-full overflow-hidden bg-primary-100 flex flex-col',
@@ -177,7 +186,7 @@ function ChatSidebarComponent({
         <motion.div
           layout
           transition={{ layout: transition }}
-          className="w-full"
+          className="w-full space-y-2"
         >
           <Button
             disabled={creatingSession}
@@ -207,6 +216,35 @@ function ChatSidebarComponent({
               )}
             </AnimatePresence>
           </Button>
+          {onOpenSearch && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleOpenSearch}
+              title={isCollapsed ? 'Search' : undefined}
+              className="w-full pl-1.5 justify-start"
+            >
+              <HugeiconsIcon
+                icon={Search01Icon}
+                size={20}
+                strokeWidth={1.5}
+                className="min-w-5"
+              />
+              <AnimatePresence initial={false} mode="wait">
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={transition}
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    Search
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Button>
+          )}
         </motion.div>
       </div>
 
@@ -327,6 +365,7 @@ function areSidebarPropsEqual(
   if (prevProps.activeFriendlyId !== nextProps.activeFriendlyId) return false
   if (prevProps.creatingSession !== nextProps.creatingSession) return false
   if (prevProps.isCollapsed !== nextProps.isCollapsed) return false
+  if (prevProps.onOpenSearch !== nextProps.onOpenSearch) return false
   if (!areSessionsEqual(prevProps.sessions, nextProps.sessions)) return false
   return true
 }
