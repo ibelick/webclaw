@@ -7,6 +7,7 @@
     "build": "pnpm -C apps/webclaw build",
     "landing:dev": "pnpm -C apps/landing dev",
     "landing:build": "pnpm -C apps/landing build",
+    "landing:deploy": "pnpm landing:build && pnpm -C apps/landing run deploy",
     "landing:preview": "pnpm -C apps/landing preview",
     "preview": "pnpm -C apps/webclaw preview",
     "test": "pnpm -C apps/webclaw test",
