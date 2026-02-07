@@ -3,11 +3,20 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type ThemeMode = 'system' | 'light' | 'dark'
+export type TextSize = 'sm' | 'md' | 'lg' | 'xl'
+
+export const textSizeClasses: Record<TextSize, string> = {
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
+}
 
 export type ChatSettings = {
   showToolMessages: boolean
   showReasoningBlocks: boolean
   theme: ThemeMode
+  textSize: TextSize
 }
 
 type ChatSettingsState = {
@@ -22,6 +31,7 @@ export const useChatSettingsStore = create<ChatSettingsState>()(
         showToolMessages: true,
         showReasoningBlocks: true,
         theme: 'system',
+        textSize: 'md',
       },
       updateSettings: (updates) =>
         set((state) => ({

@@ -15,9 +15,10 @@ import {
 } from '@/components/ui/dialog'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs'
-import { useChatSettings } from '@/hooks/use-chat-settings'
-import type { ThemeMode } from '@/hooks/use-chat-settings'
+import { useChatSettings, textSizeClasses } from '@/hooks/use-chat-settings'
+import type { ThemeMode, TextSize } from '@/hooks/use-chat-settings'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type SettingsSectionProps = {
   title: string
@@ -154,6 +155,34 @@ export function SettingsDialog({
           </SettingsSection>
 
           <SettingsSection title="Chat">
+            <SettingsRow label="Text size">
+              <div className="flex gap-1">
+                {(['sm', 'md', 'lg', 'xl'] as const).map(function renderSize(size) {
+                  const labels: Record<TextSize, string> = {
+                    sm: 'S',
+                    md: 'M',
+                    lg: 'L',
+                    xl: 'XL',
+                  }
+                  return (
+                    <button
+                      key={size}
+                      onClick={function handleClick() {
+                        updateSettings({ textSize: size })
+                      }}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md text-xs font-medium transition-colors',
+                        settings.textSize === size
+                          ? 'bg-primary-900 text-white'
+                          : 'bg-primary-100 text-primary-600 hover:bg-primary-200',
+                      )}
+                    >
+                      {labels[size]}
+                    </button>
+                  )
+                })}
+              </div>
+            </SettingsRow>
             <SettingsRow label="Show tool messages">
               <Switch
                 checked={settings.showToolMessages}
