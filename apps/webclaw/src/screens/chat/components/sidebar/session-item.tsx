@@ -15,12 +15,15 @@ import {
   MenuTrigger,
 } from '@/components/ui/menu'
 import { memo } from 'react'
+import { Pin } from 'lucide-react'
 import type { SessionMeta } from '../../types'
 
 type SessionItemProps = {
   session: SessionMeta
   active: boolean
+  isPinned: boolean
   onSelect?: () => void
+  onTogglePin: (session: SessionMeta) => void
   onRename: (session: SessionMeta) => void
   onDelete: (session: SessionMeta) => void
 }
@@ -28,7 +31,9 @@ type SessionItemProps = {
 function SessionItemComponent({
   session,
   active,
+  isPinned,
   onSelect,
+  onTogglePin,
   onRename,
   onDelete,
 }: SessionItemProps) {
@@ -52,57 +57,87 @@ function SessionItemComponent({
       <div className="flex-1 min-w-0">
         <div className="text-sm font-[450] line-clamp-1">{label}</div>
       </div>
-      <MenuRoot>
-        <MenuTrigger
+      <div className="inline-flex items-center">
+        <button
           type="button"
           onClick={(event) => {
             event.preventDefault()
             event.stopPropagation()
+            onTogglePin(session)
           }}
           className={cn(
-            'ml-2 inline-flex size-7 items-center justify-center rounded-md text-primary-700',
-            'opacity-0 transition-opacity group-hover:opacity-100 hover:bg-primary-200',
-            'aria-expanded:opacity-100 aria-expanded:bg-primary-200',
+            'inline-flex size-7 items-center justify-center rounded-md text-primary-700 hover:bg-primary-200',
+            isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           )}
+          aria-label={isPinned ? 'Unpin session' : 'Pin session'}
+          title={isPinned ? 'Unpin session' : 'Pin session'}
         >
-          <HugeiconsIcon
-            icon={MoreHorizontalIcon}
-            size={20}
-            strokeWidth={1.5}
-          />
-        </MenuTrigger>
-        <MenuContent side="bottom" align="end">
-          <MenuItem
+          <Pin size={14} className={isPinned ? 'fill-current' : ''} />
+        </button>
+        <MenuRoot>
+          <MenuTrigger
+            type="button"
             onClick={(event) => {
               event.preventDefault()
               event.stopPropagation()
-              onRename(session)
             }}
-            className="gap-2"
+            className={cn(
+              'ml-1 inline-flex size-7 items-center justify-center rounded-md text-primary-700',
+              'opacity-0 transition-opacity group-hover:opacity-100 hover:bg-primary-200',
+              'aria-expanded:opacity-100 aria-expanded:bg-primary-200',
+            )}
           >
-            <HugeiconsIcon icon={Pen01Icon} size={20} strokeWidth={1.5} />{' '}
-            Rename
-          </MenuItem>
-          <MenuItem
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onDelete(session)
-            }}
-            className="text-red-700 gap-2 hover:bg-red-50/80 data-highlighted:bg-red-50/80"
-          >
-            <HugeiconsIcon icon={Delete01Icon} size={20} strokeWidth={1.5} />{' '}
-            Delete
-          </MenuItem>
-        </MenuContent>
-      </MenuRoot>
+            <HugeiconsIcon
+              icon={MoreHorizontalIcon}
+              size={20}
+              strokeWidth={1.5}
+            />
+          </MenuTrigger>
+          <MenuContent side="bottom" align="end">
+            <MenuItem
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onTogglePin(session)
+              }}
+              className="gap-2"
+            >
+              <Pin size={14} /> {isPinned ? 'Unpin session' : 'Pin session'}
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onRename(session)
+              }}
+              className="gap-2"
+            >
+              <HugeiconsIcon icon={Pen01Icon} size={20} strokeWidth={1.5} />{' '}
+              Rename
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onDelete(session)
+              }}
+              className="text-red-700 gap-2 hover:bg-red-50/80 data-highlighted:bg-red-50/80"
+            >
+              <HugeiconsIcon icon={Delete01Icon} size={20} strokeWidth={1.5} />{' '}
+              Delete
+            </MenuItem>
+          </MenuContent>
+        </MenuRoot>
+      </div>
     </Link>
   )
 }
 
 function areSessionItemsEqual(prev: SessionItemProps, next: SessionItemProps) {
   if (prev.active !== next.active) return false
+  if (prev.isPinned !== next.isPinned) return false
   if (prev.onSelect !== next.onSelect) return false
+  if (prev.onTogglePin !== next.onTogglePin) return false
   if (prev.onRename !== next.onRename) return false
   if (prev.onDelete !== next.onDelete) return false
   if (prev.session === next.session) return true
