@@ -97,6 +97,14 @@ export function normalizeSessions(
       updatedAt:
         typeof session.updatedAt === 'number' ? session.updatedAt : undefined,
       lastMessage: session.lastMessage ?? null,
+      totalTokens:
+        typeof session.totalTokens === 'number'
+          ? session.totalTokens
+          : undefined,
+      contextTokens:
+        typeof session.contextTokens === 'number'
+          ? session.contextTokens
+          : undefined,
     }
   })
 }

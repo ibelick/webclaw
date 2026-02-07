@@ -49,6 +49,8 @@ export type SessionSummary = {
   updatedAt?: number
   lastMessage?: GatewayMessage | null
   friendlyId?: string
+  totalTokens?: number
+  contextTokens?: number
 }
 
 export type SessionListResponse = {
@@ -69,6 +71,8 @@ export type SessionMeta = {
   label?: string
   updatedAt?: number
   lastMessage?: GatewayMessage | null
+  totalTokens?: number
+  contextTokens?: number
 }
 
 export type PathsPayload = {

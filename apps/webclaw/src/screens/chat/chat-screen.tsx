@@ -88,6 +88,7 @@ export function ChatScreen({
   const {
     sessionsQuery,
     sessions,
+    activeSession,
     activeExists,
     activeSessionKey,
     activeTitle,
@@ -161,7 +162,8 @@ export function ChatScreen({
     streamStop()
     setPendingGeneration(false)
     setWaitingForResponse(false)
-  }, [streamStop])
+    void queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions })
+  }, [queryClient, streamStop])
   const streamStart = useCallback(() => {
     if (!activeFriendlyId || isNewChat) return
     if (streamTimer.current) window.clearInterval(streamTimer.current)
@@ -608,6 +610,8 @@ export function ChatScreen({
             wrapperRef={headerRef}
             showSidebarButton={isMobile}
             onOpenSidebar={handleOpenSidebar}
+            usedTokens={activeSession?.totalTokens}
+            maxTokens={activeSession?.contextTokens}
           />
 
           {hideUi ? null : (

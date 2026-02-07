@@ -2,12 +2,15 @@ import { memo } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Menu01Icon } from '@hugeicons/core-free-icons'
 import { Button } from '@/components/ui/button'
+import { ContextMeter } from './context-meter'
 
 type ChatHeaderProps = {
   activeTitle: string
   wrapperRef?: React.Ref<HTMLDivElement>
   showSidebarButton?: boolean
   onOpenSidebar?: () => void
+  usedTokens?: number
+  maxTokens?: number
 }
 
 function ChatHeaderComponent({
@@ -15,6 +18,8 @@ function ChatHeaderComponent({
   wrapperRef,
   showSidebarButton = false,
   onOpenSidebar,
+  usedTokens,
+  maxTokens,
 }: ChatHeaderProps) {
   return (
     <div
@@ -33,6 +38,11 @@ function ChatHeaderComponent({
         </Button>
       ) : null}
       <div className="text-sm font-medium truncate">{activeTitle}</div>
+      <ContextMeter
+        usedTokens={usedTokens}
+        maxTokens={maxTokens}
+        className="ml-3 hidden sm:flex"
+      />
     </div>
   )
 }
