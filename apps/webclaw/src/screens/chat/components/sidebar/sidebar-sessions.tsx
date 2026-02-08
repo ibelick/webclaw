@@ -1,7 +1,7 @@
 'use client'
 
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, PinIcon } from '@hugeicons/core-free-icons'
 import {
   Collapsible,
   CollapsibleTrigger,
@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/scroll-area'
 import { SessionItem } from './session-item'
 import type { SessionMeta } from '../../types'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
+import { usePinnedSessions } from '../../hooks/use-pinned-sessions'
 
 type SidebarSessionsProps = {
   sessions: Array<SessionMeta>
@@ -34,6 +35,22 @@ export const SidebarSessions = memo(function SidebarSessions({
   onRename,
   onDelete,
 }: SidebarSessionsProps) {
+  const { pinnedSessionKeys, toggle, isPinned } = usePinnedSessions()
+
+  const { pinned, unpinned } = useMemo(() => {
+    const pinnedSet = new Set(pinnedSessionKeys)
+    const pinnedSessions: SessionMeta[] = []
+    const unpinnedSessions: SessionMeta[] = []
+    for (const session of sessions) {
+      if (pinnedSet.has(session.key)) {
+        pinnedSessions.push(session)
+      } else {
+        unpinnedSessions.push(session)
+      }
+    }
+    return { pinned: pinnedSessions, unpinned: unpinnedSessions }
+  }, [sessions, pinnedSessionKeys])
+
   return (
     <Collapsible
       className="flex h-full flex-col flex-1 min-h-0 w-full"
@@ -55,14 +72,44 @@ export const SidebarSessions = memo(function SidebarSessions({
         <ScrollAreaRoot className="flex-1 min-h-0">
           <ScrollAreaViewport className="min-h-0">
             <div className="flex flex-col gap-px pl-2 pr-2">
-              {sessions.map((session) => (
+              {pinned.length > 0 && (
+                <>
+                  <div className="flex items-center gap-1.5 px-1.5 pt-1 pb-0.5">
+                    <HugeiconsIcon
+                      icon={PinIcon}
+                      size={12}
+                      strokeWidth={1.5}
+                      className="text-primary-500"
+                    />
+                    <span className="text-xs font-medium text-primary-500">
+                      Pinned
+                    </span>
+                  </div>
+                  {pinned.map((session) => (
+                    <SessionItem
+                      key={session.key}
+                      session={session}
+                      active={session.friendlyId === activeFriendlyId}
+                      pinned
+                      onSelect={onSelect}
+                      onRename={onRename}
+                      onDelete={onDelete}
+                      onTogglePin={toggle}
+                    />
+                  ))}
+                  <div className="h-px bg-primary-200 my-1" />
+                </>
+              )}
+              {unpinned.map((session) => (
                 <SessionItem
                   key={session.key}
                   session={session}
                   active={session.friendlyId === activeFriendlyId}
+                  pinned={false}
                   onSelect={onSelect}
                   onRename={onRename}
                   onDelete={onDelete}
+                  onTogglePin={toggle}
                 />
               ))}
             </div>
@@ -74,28 +121,4 @@ export const SidebarSessions = memo(function SidebarSessions({
       </CollapsiblePanel>
     </Collapsible>
   )
-}, areSidebarSessionsEqual)
-
-function areSidebarSessionsEqual(
-  prev: SidebarSessionsProps,
-  next: SidebarSessionsProps,
-) {
-  if (prev.activeFriendlyId !== next.activeFriendlyId) return false
-  if (prev.defaultOpen !== next.defaultOpen) return false
-  if (prev.onSelect !== next.onSelect) return false
-  if (prev.onRename !== next.onRename) return false
-  if (prev.onDelete !== next.onDelete) return false
-  if (prev.sessions === next.sessions) return true
-  if (prev.sessions.length !== next.sessions.length) return false
-  for (let i = 0; i < prev.sessions.length; i += 1) {
-    const prevSession = prev.sessions[i]
-    const nextSession = next.sessions[i]
-    if (prevSession.key !== nextSession.key) return false
-    if (prevSession.friendlyId !== nextSession.friendlyId) return false
-    if (prevSession.label !== nextSession.label) return false
-    if (prevSession.title !== nextSession.title) return false
-    if (prevSession.derivedTitle !== nextSession.derivedTitle) return false
-    if (prevSession.updatedAt !== nextSession.updatedAt) return false
-  }
-  return true
-}
+})

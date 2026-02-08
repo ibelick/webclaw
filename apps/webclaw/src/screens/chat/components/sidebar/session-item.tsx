@@ -6,6 +6,8 @@ import {
   MoreHorizontalIcon,
   Pen01Icon,
   Delete01Icon,
+  PinIcon,
+  PinOffIcon,
 } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 import {
@@ -20,17 +22,21 @@ import type { SessionMeta } from '../../types'
 type SessionItemProps = {
   session: SessionMeta
   active: boolean
+  pinned?: boolean
   onSelect?: () => void
   onRename: (session: SessionMeta) => void
   onDelete: (session: SessionMeta) => void
+  onTogglePin?: (sessionKey: string) => void
 }
 
 function SessionItemComponent({
   session,
   active,
+  pinned = false,
   onSelect,
   onRename,
   onDelete,
+  onTogglePin,
 }: SessionItemProps) {
   const label =
     session.label || session.title || session.derivedTitle || session.friendlyId
@@ -49,7 +55,15 @@ function SessionItemComponent({
           : 'bg-transparent text-primary-950 [&:hover:not(:has(button:hover))]:bg-primary-200',
       )}
     >
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex items-center gap-1">
+        {pinned && (
+          <HugeiconsIcon
+            icon={PinIcon}
+            size={12}
+            strokeWidth={1.5}
+            className="shrink-0 text-primary-400"
+          />
+        )}
         <div className="text-sm font-[450] line-clamp-1">{label}</div>
       </div>
       <MenuRoot>
@@ -72,6 +86,23 @@ function SessionItemComponent({
           />
         </MenuTrigger>
         <MenuContent side="bottom" align="end">
+          {onTogglePin && (
+            <MenuItem
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onTogglePin(session.key)
+              }}
+              className="gap-2"
+            >
+              <HugeiconsIcon
+                icon={pinned ? PinOffIcon : PinIcon}
+                size={20}
+                strokeWidth={1.5}
+              />{' '}
+              {pinned ? 'Unpin' : 'Pin'}
+            </MenuItem>
+          )}
           <MenuItem
             onClick={(event) => {
               event.preventDefault()
@@ -102,9 +133,11 @@ function SessionItemComponent({
 
 function areSessionItemsEqual(prev: SessionItemProps, next: SessionItemProps) {
   if (prev.active !== next.active) return false
+  if (prev.pinned !== next.pinned) return false
   if (prev.onSelect !== next.onSelect) return false
   if (prev.onRename !== next.onRename) return false
   if (prev.onDelete !== next.onDelete) return false
+  if (prev.onTogglePin !== next.onTogglePin) return false
   if (prev.session === next.session) return true
   return (
     prev.session.key === next.session.key &&
