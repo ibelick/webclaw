@@ -20,6 +20,8 @@ type MessageItemProps = {
   wrapperRef?: React.RefObject<HTMLDivElement | null>
   wrapperClassName?: string
   wrapperScrollMarginTop?: number
+  searchHighlight?: string
+  isSearchActive?: boolean
 }
 
 function mapToolCallToToolPart(
@@ -161,6 +163,29 @@ function imagesFromMessage(msg: GatewayMessage): ImagePart[] {
   return images
 }
 
+function highlightText(
+  text: string,
+  highlight: string,
+): React.ReactNode {
+  if (!highlight.trim()) return text
+  const regex = new RegExp(
+    `(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+    'gi',
+  )
+  const parts = text.split(regex)
+  if (parts.length === 1) return text
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <mark key={i} className="bg-yellow-200 text-primary-900 rounded-sm px-0.5">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  )
+}
+}
+
 function MessageItemComponent({
   message,
   toolResultsByCallId,
@@ -168,6 +193,8 @@ function MessageItemComponent({
   wrapperRef,
   wrapperClassName,
   wrapperScrollMarginTop,
+  searchHighlight,
+  isSearchActive = false,
 }: MessageItemProps) {
   const { settings } = useChatSettings()
   const role = message.role || 'assistant'
@@ -218,15 +245,16 @@ function MessageItemComponent({
       )}
       <Message className={cn(isUser ? 'flex-row-reverse' : '')}>
         <MessageContent
-          markdown={!isUser}
+          markdown={!isUser && !searchHighlight}
           className={cn(
             'text-primary-900',
             !isUser
               ? 'bg-transparent w-full'
               : 'bg-primary-100 px-4 py-2.5 max-w-[85%]',
+            isSearchActive && 'ring-2 ring-yellow-400 rounded-lg',
           )}
         >
-          {text}
+          {searchHighlight ? highlightText(text, searchHighlight) : text}
         </MessageContent>
       </Message>
 
@@ -306,9 +334,8 @@ function areMessagesEqual(
   if (rawTimestamp(prevProps.message) !== rawTimestamp(nextProps.message)) {
     return false
   }
-  // No need to check settings here as the hook will cause a re-render
-  // and areMessagesEqual is for props only.
-  // However, memo components with hooks will re-render if the hook state changes.
+  if (prevProps.searchHighlight !== nextProps.searchHighlight) return false
+  if (prevProps.isSearchActive !== nextProps.isSearchActive) return false
   return true
 }
 

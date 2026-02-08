@@ -45,6 +45,8 @@ import {
 import { useChatMeasurements } from './hooks/use-chat-measurements'
 import { useChatHistory } from './hooks/use-chat-history'
 import { useChatMobile } from './hooks/use-chat-mobile'
+import { useChatSearch } from './hooks/use-chat-search'
+import { ChatSearchBar } from './components/chat-search-bar'
 import { useChatSessions } from './hooks/use-chat-sessions'
 import type { ChatComposerHelpers } from './components/chat-composer'
 import type { HistoryResponse } from './types'
@@ -113,6 +115,8 @@ export function ChatScreen({
     sessionsReady: sessionsQuery.isSuccess,
     queryClient,
   })
+
+  const chatSearch = useChatSearch(displayMessages)
 
   const uiQuery = useQuery({
     queryKey: chatUiQueryKey,
@@ -624,6 +628,24 @@ export function ChatScreen({
             maxTokens={activeSession?.contextTokens}
           />
 
+          {chatSearch.isOpen && (
+            <ChatSearchBar
+              query={chatSearch.query}
+              scope={chatSearch.scope}
+              resultCount={
+                chatSearch.scope === 'current'
+                  ? chatSearch.results.length
+                  : chatSearch.globalResults.length
+              }
+              activeIndex={chatSearch.activeIndex}
+              onQueryChange={chatSearch.setQuery}
+              onScopeChange={chatSearch.setScope}
+              onNext={chatSearch.goNext}
+              onPrev={chatSearch.goPrev}
+              onClose={chatSearch.close}
+            />
+          )}
+
           {hideUi ? null : (
             <>
               <ChatMessageList
@@ -638,6 +660,17 @@ export function ChatScreen({
                 pinGroupMinHeight={pinGroupMinHeight}
                 headerHeight={headerHeight}
                 contentStyle={stableContentStyle}
+                searchHighlight={
+                  chatSearch.isOpen && chatSearch.query.trim()
+                    ? chatSearch.query
+                    : undefined
+                }
+                searchResults={
+                  chatSearch.isOpen ? chatSearch.results : undefined
+                }
+                searchActiveIndex={
+                  chatSearch.isOpen ? chatSearch.activeIndex : undefined
+                }
               />
               <ChatComposer
                 onSubmit={send}

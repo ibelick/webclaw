@@ -9,6 +9,12 @@ import {
 } from '@/components/prompt-kit/chat-container'
 import { TypingIndicator } from '@/components/prompt-kit/typing-indicator'
 
+type SearchResult = {
+  messageIndex: number
+  sessionKey?: string
+  sessionTitle?: string
+}
+
 type ChatMessageListProps = {
   messages: Array<GatewayMessage>
   loading: boolean
@@ -22,6 +28,9 @@ type ChatMessageListProps = {
   pinGroupMinHeight: number
   headerHeight: number
   contentStyle?: React.CSSProperties
+  searchHighlight?: string
+  searchResults?: Array<SearchResult>
+  searchActiveIndex?: number
 }
 
 function ChatMessageListComponent({
@@ -37,6 +46,9 @@ function ChatMessageListComponent({
   pinGroupMinHeight,
   headerHeight,
   contentStyle,
+  searchHighlight,
+  searchResults,
+  searchActiveIndex,
 }: ChatMessageListProps) {
   const anchorRef = useRef<HTMLDivElement | null>(null)
   const lastUserRef = useRef<HTMLDivElement | null>(null)
@@ -60,6 +72,20 @@ function ChatMessageListComponent({
     }
     return map
   }, [messages])
+
+  // Compute active search target message index
+  const activeSearchMessageIndex =
+    searchResults &&
+    typeof searchActiveIndex === 'number' &&
+    searchResults[searchActiveIndex]
+      ? searchResults[searchActiveIndex].messageIndex
+      : -1
+
+  // Set of message indices that match the search
+  const searchMatchIndices = useMemo(() => {
+    if (!searchResults || searchResults.length === 0) return new Set<number>()
+    return new Set(searchResults.map((r) => r.messageIndex))
+  }, [searchResults])
 
   const lastAssistantIndex = displayMessages
     .map((message, index) => ({ message, index }))
@@ -136,6 +162,12 @@ function ChatMessageListComponent({
                       hasToolCalls ? toolResultsByCallId : undefined
                     }
                     forceActionsVisible={forceActionsVisible}
+                    searchHighlight={
+                      searchHighlight && searchMatchIndices.has(index)
+                        ? searchHighlight
+                        : undefined
+                    }
+                    isSearchActive={index === activeSearchMessageIndex}
                   />
                 )
               })}
@@ -176,6 +208,12 @@ function ChatMessageListComponent({
                       wrapperRef={wrapperRef}
                       wrapperClassName={wrapperClassName}
                       wrapperScrollMarginTop={wrapperScrollMarginTop}
+                      searchHighlight={
+                        searchHighlight && searchMatchIndices.has(realIndex)
+                          ? searchHighlight
+                          : undefined
+                      }
+                      isSearchActive={realIndex === activeSearchMessageIndex}
                     />
                   )
                 })}
@@ -204,6 +242,12 @@ function ChatMessageListComponent({
                   hasToolCalls ? toolResultsByCallId : undefined
                 }
                 forceActionsVisible={forceActionsVisible}
+                searchHighlight={
+                  searchHighlight && searchMatchIndices.has(index)
+                    ? searchHighlight
+                    : undefined
+                }
+                isSearchActive={index === activeSearchMessageIndex}
               />
             )
           })
@@ -233,7 +277,10 @@ function areChatMessageListEqual(
     prev.pinToTop === next.pinToTop &&
     prev.pinGroupMinHeight === next.pinGroupMinHeight &&
     prev.headerHeight === next.headerHeight &&
-    prev.contentStyle === next.contentStyle
+    prev.contentStyle === next.contentStyle &&
+    prev.searchHighlight === next.searchHighlight &&
+    prev.searchResults === next.searchResults &&
+    prev.searchActiveIndex === next.searchActiveIndex
   )
 }
 
