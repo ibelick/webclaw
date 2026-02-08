@@ -3,9 +3,10 @@
 import { Link } from '@tanstack/react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
+  Delete01Icon,
   MoreHorizontalIcon,
   Pen01Icon,
-  Delete01Icon,
+  PinIcon,
 } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
 import {
@@ -15,7 +16,6 @@ import {
   MenuTrigger,
 } from '@/components/ui/menu'
 import { memo } from 'react'
-import { Pin } from 'lucide-react'
 import type { SessionMeta } from '../../types'
 
 type SessionItemProps = {
@@ -72,7 +72,7 @@ function SessionItemComponent({
           aria-label={isPinned ? 'Unpin session' : 'Pin session'}
           title={isPinned ? 'Unpin session' : 'Pin session'}
         >
-          <Pin size={14} className={isPinned ? 'fill-current' : ''} />
+          <HugeiconsIcon icon={PinIcon} size={16} strokeWidth={1.7} />
         </button>
         <MenuRoot>
           <MenuTrigger
@@ -102,7 +102,8 @@ function SessionItemComponent({
               }}
               className="gap-2"
             >
-              <Pin size={14} /> {isPinned ? 'Unpin session' : 'Pin session'}
+              <HugeiconsIcon icon={PinIcon} size={16} strokeWidth={1.7} />{' '}
+              {isPinned ? 'Unpin session' : 'Pin session'}
             </MenuItem>
             <MenuItem
               onClick={(event) => {

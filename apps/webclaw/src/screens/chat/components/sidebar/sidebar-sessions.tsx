@@ -14,10 +14,9 @@ import {
   ScrollAreaThumb,
 } from '@/components/ui/scroll-area'
 import { SessionItem } from './session-item'
+import { usePinnedSessions } from '@/hooks/use-pinned-sessions'
 import type { SessionMeta } from '../../types'
-import { memo, useCallback, useMemo, useState } from 'react'
-
-const PINNED_SESSIONS_KEY = 'webclaw-pinned-sessions'
+import { memo, useCallback, useMemo } from 'react'
 
 type SidebarSessionsProps = {
   sessions: Array<SessionMeta>
@@ -28,31 +27,6 @@ type SidebarSessionsProps = {
   onDelete: (session: SessionMeta) => void
 }
 
-function readPinnedSessionKeys(): Array<string> {
-  if (typeof window === 'undefined') return []
-  try {
-    const stored = localStorage.getItem(PINNED_SESSIONS_KEY)
-    if (!stored) return []
-    const parsed = JSON.parse(stored)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter((value): value is string => typeof value === 'string')
-  } catch {
-    return []
-  }
-}
-
-function writePinnedSessionKeys(keys: Array<string>) {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(
-      PINNED_SESSIONS_KEY,
-      JSON.stringify(Array.from(new Set(keys))),
-    )
-  } catch {
-    // Ignore storage errors.
-  }
-}
-
 export const SidebarSessions = memo(function SidebarSessions({
   sessions,
   activeFriendlyId,
@@ -61,9 +35,7 @@ export const SidebarSessions = memo(function SidebarSessions({
   onRename,
   onDelete,
 }: SidebarSessionsProps) {
-  const [pinnedSessionKeys, setPinnedSessionKeys] = useState<Array<string>>(() =>
-    readPinnedSessionKeys(),
-  )
+  const { pinnedSessionKeys, togglePinnedSession } = usePinnedSessions()
 
   const pinnedSessionSet = useMemo(
     () => new Set(pinnedSessionKeys),
@@ -80,15 +52,12 @@ export const SidebarSessions = memo(function SidebarSessions({
     [sessions, pinnedSessionSet],
   )
 
-  const handleTogglePin = useCallback((session: SessionMeta) => {
-    setPinnedSessionKeys((prevKeys) => {
-      const nextKeys = prevKeys.includes(session.key)
-        ? prevKeys.filter((key) => key !== session.key)
-        : [...prevKeys, session.key]
-      writePinnedSessionKeys(nextKeys)
-      return nextKeys
-    })
-  }, [])
+  const handleTogglePin = useCallback(
+    (session: SessionMeta) => {
+      togglePinnedSession(session.key)
+    },
+    [togglePinnedSession],
+  )
 
   return (
     <Collapsible
