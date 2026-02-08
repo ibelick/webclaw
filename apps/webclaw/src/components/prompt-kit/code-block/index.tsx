@@ -35,7 +35,7 @@ import langTypescript from '@shikijs/langs/typescript'
 import langTsx from '@shikijs/langs/tsx'
 import langXml from '@shikijs/langs/xml'
 import langYaml from '@shikijs/langs/yaml'
-import { useResolvedTheme } from '@/hooks/use-chat-settings'
+import { useResolvedTheme, useChatSettingsStore, TEXT_SIZE_CLASSES } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { formatLanguageName, normalizeLanguage, resolveLanguage } from './utils'
@@ -97,6 +97,8 @@ export function CodeBlock({
   className,
 }: CodeBlockProps) {
   const resolvedTheme = useResolvedTheme()
+  const textSize = useChatSettingsStore((s) => s.settings.textSize)
+  const codeSizeClass = TEXT_SIZE_CLASSES[textSize]
   const [copied, setCopied] = useState(false)
   const [html, setHtml] = useState<string | null>(null)
   const [resolvedLanguage, setResolvedLanguage] = useState('text')
@@ -179,7 +181,8 @@ export function CodeBlock({
       {html ? (
         <div
           className={cn(
-            'text-sm text-primary-900 [&>pre]:overflow-x-auto',
+            codeSizeClass,
+            'text-primary-900 [&>pre]:overflow-x-auto',
             isSingleLine
               ? '[&>pre]:whitespace-pre [&>pre]:px-3 [&>pre]:py-2'
               : '[&>pre]:px-3 [&>pre]:py-3',
@@ -189,7 +192,7 @@ export function CodeBlock({
       ) : (
         <pre
           className={cn(
-            'text-sm',
+            codeSizeClass,
             isSingleLine ? 'whitespace-pre px-3 py-2' : 'px-3 py-3',
           )}
         >
