@@ -622,6 +622,7 @@ export function ChatScreen({
             onOpenSidebar={handleOpenSidebar}
             usedTokens={activeSession?.totalTokens}
             maxTokens={activeSession?.contextTokens}
+            messages={displayMessages}
           />
 
           {hideUi ? null : (
