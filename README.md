@@ -19,3 +19,19 @@ Default URL is `ws://127.0.0.1:18789`. Docs: https://docs.openclaw.ai/gateway
 pnpm install
 pnpm dev
 ```
+
+## Docker
+
+```bash
+# Build and run
+docker compose up --build
+
+# Or build manually
+docker build -t webclaw .
+docker run -p 3000:3000 \
+  -e CLAWDBOT_GATEWAY_URL=ws://host.docker.internal:18789 \
+  -e CLAWDBOT_GATEWAY_TOKEN=your_token \
+  webclaw
+```
+
+Note: Use `host.docker.internal` instead of `127.0.0.1` to connect to a gateway running on your host machine.
