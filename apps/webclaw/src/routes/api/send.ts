@@ -63,6 +63,10 @@ export const Route = createFileRoute('/api/send')({
             sessionKey,
             message,
             thinking,
+            attachments:
+              Array.isArray(body.attachments) && body.attachments.length > 0
+                ? body.attachments
+                : undefined,
             deliver: false,
             timeoutMs: 120_000,
             idempotencyKey:

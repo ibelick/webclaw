@@ -1,11 +1,11 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import {
   getMessageTimestamp,
   getToolCallsFromMessage,
   textFromMessage,
 } from '../utils'
 import { MessageActionsBar } from './message-actions-bar'
-import type { GatewayMessage, ToolCallContent } from '../types'
+import type { GatewayMessage, ToolCallContent, ImageContent } from '../types'
 import type { ToolPart } from '@/components/prompt-kit/tool'
 import { Message, MessageContent } from '@/components/prompt-kit/message'
 import { Thinking } from '@/components/prompt-kit/thinking'
@@ -144,6 +144,28 @@ function MessageItemComponent({
   const isUser = role === 'user'
   const timestamp = getMessageTimestamp(message)
 
+  // Extract image parts from message content
+  const imageParts = useMemo(() => {
+    const parts = Array.isArray(message.content) ? message.content : []
+    const images: Array<{ src: string; alt: string }> = []
+    for (const part of parts) {
+      if (part.type === 'image') {
+        const imgPart = part as ImageContent
+        const data =
+          imgPart.data ?? imgPart.content ?? imgPart.source?.data ?? ''
+        const mime =
+          imgPart.mimeType ?? imgPart.source?.media_type ?? 'image/jpeg'
+        if (data) {
+          images.push({
+            src: data.startsWith('data:') ? data : `data:${mime};base64,${data}`,
+            alt: 'Image attachment',
+          })
+        }
+      }
+    }
+    return images
+  }, [message.content])
+
   // Get tool calls from this message (for assistant messages)
   const toolCalls = role === 'assistant' ? getToolCallsFromMessage(message) : []
   const hasToolCalls = toolCalls.length > 0
@@ -180,6 +202,32 @@ function MessageItemComponent({
           {text}
         </MessageContent>
       </Message>
+
+      {/* Render image attachments */}
+      {imageParts.length > 0 && (
+        <div
+          className={cn(
+            'flex flex-wrap gap-2 mt-1',
+            isUser ? 'justify-end' : 'justify-start',
+          )}
+        >
+          {imageParts.map((img, i) => (
+            <a
+              key={i}
+              href={img.src}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <img
+                src={img.src}
+                alt={img.alt}
+                className="max-w-[300px] max-h-[300px] rounded-lg border border-primary-200 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+              />
+            </a>
+          ))}
+        </div>
+      )
 
       {/* Render tool calls with their results */}
       {hasToolCalls && settings.showToolMessages && (

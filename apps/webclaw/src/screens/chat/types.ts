@@ -27,7 +27,19 @@ export type ThinkingContent = {
   thinkingSignature?: string
 }
 
-export type MessageContent = TextContent | ToolCallContent | ThinkingContent
+export type ImageContent = {
+  type: 'image'
+  mimeType?: string
+  data?: string
+  content?: string
+  source?: { type?: string; media_type?: string; data?: string }
+}
+
+export type MessageContent =
+  | TextContent
+  | ToolCallContent
+  | ThinkingContent
+  | ImageContent
 
 export type GatewayMessage = {
   role?: string

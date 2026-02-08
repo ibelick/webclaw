@@ -348,6 +348,7 @@ export function ChatScreen({
     friendlyId: string,
     body: string,
     skipOptimistic = false,
+    attachments?: Array<{ mimeType: string; content: string }>,
   ) {
     let optimisticClientId = ''
     if (!skipOptimistic) {
@@ -381,6 +382,7 @@ export function ChatScreen({
         friendlyId,
         message: body,
         thinking: 'low',
+        attachments,
         idempotencyKey: crypto.randomUUID(),
       }),
     })
@@ -449,8 +451,13 @@ export function ChatScreen({
   }, [queryClient])
 
   const send = useCallback(
-    (body: string, helpers: ChatComposerHelpers) => {
-      if (body.length === 0) return
+    (
+      body: string,
+      helpers: ChatComposerHelpers,
+      attachments?: Array<{ mimeType: string; content: string }>,
+    ) => {
+      if (body.length === 0 && (!attachments || attachments.length === 0))
+        return
       helpers.reset()
 
       if (isNewChat) {
@@ -503,7 +510,13 @@ export function ChatScreen({
 
       const sessionKeyForSend =
         forcedSessionKey || resolvedSessionKey || activeSessionKey
-      sendMessage(sessionKeyForSend, activeFriendlyId, body)
+      sendMessage(
+        sessionKeyForSend,
+        activeFriendlyId,
+        body,
+        false,
+        attachments,
+      )
     },
     [
       activeFriendlyId,
