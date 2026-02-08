@@ -33,6 +33,7 @@ import { ChatMessageList } from './components/chat-message-list'
 import { ChatComposer } from './components/chat-composer'
 import type { AttachmentFile } from '@/components/attachment-button'
 import { GatewayStatusMessage } from './components/gateway-status-message'
+import { SearchDialog } from '@/components/search-dialog'
 import {
   consumePendingSend,
   hasPendingGeneration,
@@ -47,6 +48,7 @@ import { useChatMeasurements } from './hooks/use-chat-measurements'
 import { useChatHistory } from './hooks/use-chat-history'
 import { useChatMobile } from './hooks/use-chat-mobile'
 import { useChatSessions } from './hooks/use-chat-sessions'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import type { ChatComposerHelpers } from './components/chat-composer'
 import type { HistoryResponse } from './types'
 import { cn } from '@/lib/utils'
@@ -73,6 +75,8 @@ export function ChatScreen({
   const [creatingSession, setCreatingSession] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [showSearchDialog, setShowSearchDialog] = useState(false)
+  const [searchMode, setSearchMode] = useState<'current' | 'global'>('current')
   const { headerRef, composerRef, mainRef, pinGroupMinHeight, headerHeight } =
     useChatMeasurements()
   const [waitingForResponse, setWaitingForResponse] = useState(
@@ -545,6 +549,22 @@ export function ChatScreen({
     }
   }, [isMobile, navigate, queryClient])
 
+  const handleSearchCurrent = useCallback(() => {
+    setSearchMode('current')
+    setShowSearchDialog(true)
+  }, [])
+
+  const handleSearchGlobal = useCallback(() => {
+    setSearchMode('global')
+    setShowSearchDialog(true)
+  }, [])
+
+  useKeyboardShortcuts({
+    onSearchCurrent: handleSearchCurrent,
+    onSearchGlobal: handleSearchGlobal,
+    onNewChat: startNewChat,
+  })
+
   const handleToggleSidebarCollapse = useCallback(() => {
     setChatUiState(queryClient, function toggle(state) {
       return { ...state, isSidebarCollapsed: !state.isSidebarCollapsed }
@@ -589,6 +609,7 @@ export function ChatScreen({
       activeFriendlyId={activeFriendlyId}
       creatingSession={creatingSession}
       onCreateSession={startNewChat}
+      onOpenSearch={handleSearchGlobal}
       isCollapsed={isMobile ? false : isSidebarCollapsed}
       onToggleCollapse={handleToggleSidebarCollapse}
       onSelectSession={handleSelectSession}
@@ -654,6 +675,14 @@ export function ChatScreen({
           )}
         </main>
       </div>
+      <SearchDialog
+        open={showSearchDialog}
+        mode={searchMode}
+        onOpenChange={setShowSearchDialog}
+        sessions={sessions}
+        currentFriendlyId={activeFriendlyId}
+        currentSessionKey={sessionKeyForHistory}
+      />
     </div>
   )
 }
