@@ -1,10 +1,12 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Folder01Icon,
+  ComputerIcon,
   PencilEdit02Icon,
   Search01Icon,
   Settings01Icon,
   SidebarLeft01Icon,
+  SmartPhone01Icon,
 } from '@hugeicons/core-free-icons'
 import { AnimatePresence, motion } from 'motion/react'
 import { memo, useState } from 'react'
@@ -312,6 +314,86 @@ function ChatSidebarComponent({
               {isCollapsed && (
                 <TooltipContent side="right">
                   Files
+                </TooltipContent>
+              )}
+            </TooltipRoot>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <TooltipRoot>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/services"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'w-full pl-1.5 justify-start',
+                  )}
+                  onClick={onSelectSession}
+                >
+                  <HugeiconsIcon
+                    icon={ComputerIcon}
+                    size={20}
+                    strokeWidth={1.5}
+                    className="min-w-5"
+                  />
+                  <AnimatePresence initial={false} mode="wait">
+                    {!isCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={transition}
+                        className="overflow-hidden whitespace-nowrap"
+                      >
+                        Services
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent side="right">
+                  Services
+                </TooltipContent>
+              )}
+            </TooltipRoot>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <TooltipRoot>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/bots"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'w-full pl-1.5 justify-start',
+                  )}
+                  onClick={onSelectSession}
+                >
+                  <HugeiconsIcon
+                    icon={SmartPhone01Icon}
+                    size={20}
+                    strokeWidth={1.5}
+                    className="min-w-5"
+                  />
+                  <AnimatePresence initial={false} mode="wait">
+                    {!isCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={transition}
+                        className="overflow-hidden whitespace-nowrap"
+                      >
+                        Bots
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent side="right">
+                  Bots
                 </TooltipContent>
               )}
             </TooltipRoot>
