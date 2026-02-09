@@ -28,6 +28,7 @@ import {
 import { chatUiQueryKey, getChatUiState, setChatUiState } from './chat-ui'
 import { ChatSidebar } from './components/chat-sidebar'
 import { ChatHeader } from './components/chat-header'
+import { useExport } from '@/hooks/use-export'
 import { ChatMessageList } from './components/chat-message-list'
 import { ChatComposer } from './components/chat-composer'
 import type { AttachmentFile } from '@/components/attachment-button'
@@ -89,7 +90,6 @@ export function ChatScreen({
   const {
     sessionsQuery,
     sessions,
-    activeSession,
     activeExists,
     activeSessionKey,
     activeTitle,
@@ -112,6 +112,12 @@ export function ChatScreen({
     activeExists,
     sessionsReady: sessionsQuery.isSuccess,
     queryClient,
+  })
+
+  const { exportConversation } = useExport({
+    currentFriendlyId: activeFriendlyId,
+    currentSessionKey: sessionKeyForHistory,
+    sessionTitle: activeTitle,
   })
 
   const uiQuery = useQuery({
@@ -163,8 +169,7 @@ export function ChatScreen({
     streamStop()
     setPendingGeneration(false)
     setWaitingForResponse(false)
-    void queryClient.invalidateQueries({ queryKey: chatQueryKeys.sessions })
-  }, [queryClient, streamStop])
+  }, [streamStop])
   const streamStart = useCallback(() => {
     if (!activeFriendlyId || isNewChat) return
     if (streamTimer.current) window.clearInterval(streamTimer.current)
@@ -620,8 +625,8 @@ export function ChatScreen({
             wrapperRef={headerRef}
             showSidebarButton={isMobile}
             onOpenSidebar={handleOpenSidebar}
-            usedTokens={activeSession?.totalTokens}
-            maxTokens={activeSession?.contextTokens}
+            onExport={exportConversation}
+            hasMessages={displayMessages.length > 0}
           />
 
           {hideUi ? null : (
