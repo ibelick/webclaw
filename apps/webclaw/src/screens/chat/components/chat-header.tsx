@@ -14,8 +14,9 @@ type ChatHeaderProps = {
   onOpenSidebar?: () => void
   usedTokens?: number
   maxTokens?: number
-  onExport?: (format: ExportFormat) => void
+  onExport: (format: ExportFormat) => void
   exportDisabled?: boolean
+  showExport?: boolean
 }
 
 function ChatHeaderComponent({
@@ -27,6 +28,7 @@ function ChatHeaderComponent({
   maxTokens,
   onExport,
   exportDisabled = false,
+  showExport = true,
 }: ChatHeaderProps) {
   return (
     <div
@@ -48,7 +50,7 @@ function ChatHeaderComponent({
         {activeTitle}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {onExport ? (
+        {showExport ? (
           <ExportMenu onExport={onExport} disabled={exportDisabled} />
         ) : null}
         <ContextMeter usedTokens={usedTokens} maxTokens={maxTokens} />

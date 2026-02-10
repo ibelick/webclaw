@@ -10,6 +10,12 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '@/components/ui/menu'
+import {
+  TooltipContent,
+  TooltipProvider,
+  TooltipRoot,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -38,18 +44,29 @@ export function ExportMenu({ onExport, disabled }: ExportMenuProps) {
 
   return (
     <MenuRoot open={disabled ? false : open} onOpenChange={handleOpenChange}>
-      <MenuTrigger
-        type="button"
-        className={cn(
-          buttonVariants({ size: 'icon-sm', variant: 'ghost' }),
-          'text-primary-800 hover:bg-primary-100',
-        )}
-        aria-label="Download conversation"
-        title="Download conversation"
-        aria-disabled={disabled ? true : undefined}
-      >
-        <HugeiconsIcon icon={Download01Icon} size={20} strokeWidth={1.5} />
-      </MenuTrigger>
+      <TooltipProvider>
+        <TooltipRoot>
+          <TooltipTrigger
+            render={
+              <MenuTrigger
+                type="button"
+                className={cn(
+                  buttonVariants({ size: 'icon-sm', variant: 'ghost' }),
+                )}
+                aria-label="Download conversation"
+                aria-disabled={disabled ? true : undefined}
+              >
+                <HugeiconsIcon
+                  icon={Download01Icon}
+                  size={20}
+                  strokeWidth={1.5}
+                />
+              </MenuTrigger>
+            }
+          />
+          <TooltipContent side="top">Download</TooltipContent>
+        </TooltipRoot>
+      </TooltipProvider>
       <MenuContent side="bottom" align="end">
         {formats.map(function renderFormat({ format, label, ext }) {
           return (

@@ -634,6 +634,7 @@ export function ChatScreen({
             onOpenSidebar={handleOpenSidebar}
             onExport={exportConversation}
             exportDisabled={historyLoading || displayMessages.length === 0}
+            showExport={!isNewChat}
             usedTokens={activeSession?.totalTokens}
             maxTokens={activeSession?.contextTokens}
           />
