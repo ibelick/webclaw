@@ -16,7 +16,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs'
 import { useChatSettings } from '@/hooks/use-chat-settings'
-import type { ThemeMode } from '@/hooks/use-chat-settings'
+import type { ThemeMode, TextSize } from '@/hooks/use-chat-settings'
 import { Button } from '@/components/ui/button'
 
 type SettingsSectionProps = {
@@ -74,6 +74,12 @@ export function SettingsDialog({
     { value: 'system', label: 'System', icon: ComputerIcon },
     { value: 'light', label: 'Light', icon: Sun01Icon },
     { value: 'dark', label: 'Dark', icon: Moon01Icon },
+  ] as const
+  const textSizeOptions = [
+    { value: 'sm', label: 'S' },
+    { value: 'md', label: 'M' },
+    { value: 'lg', label: 'L' },
+    { value: 'xl', label: 'XL' },
   ] as const
   function applyTheme(theme: ThemeMode) {
     if (typeof document === 'undefined') return
@@ -145,6 +151,25 @@ export function SettingsDialog({
                         size={20}
                         strokeWidth={1.5}
                       />
+                      <span>{option.label}</span>
+                    </TabsTab>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </SettingsRow>
+            <SettingsRow label="Text size">
+              <Tabs
+                value={settings.textSize}
+                onValueChange={(value) => {
+                  updateSettings({ textSize: value as TextSize })
+                }}
+              >
+                <TabsList
+                  variant="default"
+                  className="gap-2 *:data-[slot=tab-indicator]:duration-0"
+                >
+                  {textSizeOptions.map((option) => (
+                    <TabsTab key={option.value} value={option.value}>
                       <span>{option.label}</span>
                     </TabsTab>
                   ))}

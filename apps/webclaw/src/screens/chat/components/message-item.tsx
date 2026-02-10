@@ -10,7 +10,7 @@ import type { ToolPart } from '@/components/prompt-kit/tool'
 import { Message, MessageContent } from '@/components/prompt-kit/message'
 import { Thinking } from '@/components/prompt-kit/thinking'
 import { Tool } from '@/components/prompt-kit/tool'
-import { useChatSettings } from '@/hooks/use-chat-settings'
+import { useChatSettings, TEXT_SIZE_CLASSES } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 
 type MessageItemProps = {
@@ -176,6 +176,7 @@ function MessageItemComponent({
   const images = imagesFromMessage(message)
   const isUser = role === 'user'
   const timestamp = getMessageTimestamp(message)
+  const textSizeClass = TEXT_SIZE_CLASSES[settings.textSize]
 
   // Get tool calls from this message (for assistant messages)
   const toolCalls = role === 'assistant' ? getToolCallsFromMessage(message) : []
@@ -221,6 +222,7 @@ function MessageItemComponent({
           markdown={!isUser}
           className={cn(
             'text-primary-900',
+            textSizeClass,
             !isUser
               ? 'bg-transparent w-full'
               : 'bg-primary-100 px-4 py-2.5 max-w-[85%]',
