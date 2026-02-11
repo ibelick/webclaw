@@ -1,0 +1,10 @@
+services:
+  webclaw:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - CLAWDBOT_GATEWAY_URL=${CLAWDBOT_GATEWAY_URL:-ws://host.docker.internal:18789}
+      - CLAWDBOT_GATEWAY_TOKEN=${CLAWDBOT_GATEWAY_TOKEN:-}
+      - CLAWDBOT_GATEWAY_PASSWORD=${CLAWDBOT_GATEWAY_PASSWORD:-}
+    restart: unless-stopped
