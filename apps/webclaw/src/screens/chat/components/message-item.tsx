@@ -10,7 +10,7 @@ import type { ToolPart } from '@/components/prompt-kit/tool'
 import { Message, MessageContent } from '@/components/prompt-kit/message'
 import { Thinking } from '@/components/prompt-kit/thinking'
 import { Tool } from '@/components/prompt-kit/tool'
-import { useChatSettings } from '@/hooks/use-chat-settings'
+import { useChatSettings, textSizeClasses } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 
 type MessageItemProps = {
@@ -221,6 +221,7 @@ function MessageItemComponent({
           markdown={!isUser}
           className={cn(
             'text-primary-900',
+            textSizeClasses[settings.textSize],
             !isUser
               ? 'bg-transparent w-full'
               : 'bg-primary-100 px-4 py-2.5 max-w-[85%]',
