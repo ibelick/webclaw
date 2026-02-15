@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-import { getMessageTimestamp } from '../utils'
+import { getMessageTimestamp, textFromMessage } from '../utils'
 import {
   chatQueryKeys,
   updateHistoryMessages,
@@ -50,6 +50,7 @@ export function useChatStream({
   const streamRunStateVersionRef = useRef(new Map<string, number>())
   const streamRunSourceRef = useRef(new Map<string, 'agent' | 'chat'>())
   const streamSeenEventKeysRef = useRef(new Set<string>())
+  const streamSeenPayloadKeysRef = useRef(new Set<string>())
   const refreshHistoryRef = useRef(refreshHistory)
   refreshHistoryRef.current = refreshHistory
 
@@ -66,6 +67,7 @@ export function useChatStream({
     streamRunStateVersionRef.current.clear()
     streamRunSourceRef.current.clear()
     streamSeenEventKeysRef.current.clear()
+    streamSeenPayloadKeysRef.current.clear()
   }, [])
 
   useEffect(() => {
@@ -126,11 +128,7 @@ export function useChatStream({
                 parsed.event === 'agent' ? 'agent' : 'chat'
               if (streamRunId) {
                 const currentSource = streamRunSourceRef.current.get(streamRunId)
-                if (
-                  payloadSource === 'chat' &&
-                  currentSource === 'agent' &&
-                  payload.state === 'delta'
-                ) {
+                if (payloadSource === 'chat' && currentSource === 'agent') {
                   continue
                 }
                 if (payloadSource === 'agent' || !currentSource) {
@@ -161,6 +159,16 @@ export function useChatStream({
                   streamRunId,
                   payload.state,
                   eventSeq,
+                )
+              ) {
+                continue
+              }
+
+              if (
+                shouldSkipDuplicatePayload(
+                  streamSeenPayloadKeysRef.current,
+                  payloadSource,
+                  payload,
                 )
               ) {
                 continue
@@ -220,6 +228,21 @@ export function useChatStream({
                 const resolvedLastUserIndex =
                   lastUserIndex >= 0 ? messages.length - 1 - lastUserIndex : -1
 
+                const nextId = getMessageId(nextMessage)
+                if (nextId) {
+                  const existingById = messages.findIndex(
+                    (message) => getMessageId(message) === nextId,
+                  )
+                  if (existingById >= 0) {
+                    const next = [...messages]
+                    next[existingById] = mergeStreamMessage(
+                      messages[existingById],
+                      nextMessage,
+                    )
+                    return next
+                  }
+                }
+
                 if (streamRunId) {
                   const index = findStreamMessageIndex(
                     messages,
@@ -244,7 +267,15 @@ export function useChatStream({
                     const target = messages.length - 1 - index
                     if (target > resolvedLastUserIndex) {
                       const targetTime = getMessageTimestamp(messages[target])
-                      if (Math.abs(nextTime - targetTime) <= 15000) {
+                      const targetText = textFromMessage(messages[target])
+                      const nextText = textFromMessage(nextMessage)
+                      const textMatches = shouldMergeAssistantByText(
+                        targetText,
+                        nextText,
+                      )
+                      if (
+                        Math.abs(nextTime - targetTime) <= 15000 || textMatches
+                      ) {
                         const next = [...messages]
                         next[target] = mergeStreamMessage(messages[target], nextMessage)
                         return next
@@ -488,6 +519,52 @@ function shouldSkipDuplicateEvent(
     seen.clear()
   }
   return false
+}
+
+function shouldSkipDuplicatePayload(
+  seen: Set<string>,
+  source: 'agent' | 'chat',
+  payload: StreamChatPayload,
+): boolean {
+  const runId = normalizeString(payload.runId)
+  const state = normalizeString(payload.state)
+  const sessionKey = normalizeString(payload.sessionKey)
+  const message = payload.message
+  const messageId = message ? getMessageId(message) : ''
+  const role = normalizeString(message?.role)
+  const toolCallId = normalizeString(message?.toolCallId)
+  const text = message ? textFromMessage(message).slice(0, 512) : ''
+
+  if (!runId && !messageId && !text) return false
+
+  const key = `${source}:${runId}:${state}:${sessionKey}:${role}:${messageId}:${toolCallId}:${text}`
+  if (seen.has(key)) return true
+  seen.add(key)
+  if (seen.size > 4000) {
+    seen.clear()
+  }
+  return false
+}
+
+function shouldMergeAssistantByText(previousText: string, nextText: string): boolean {
+  if (!previousText || !nextText) return false
+  if (previousText === nextText) return true
+
+  const previousNormalized = normalizeAssistantTextForDedup(previousText)
+  const nextNormalized = normalizeAssistantTextForDedup(nextText)
+  if (!previousNormalized || !nextNormalized) return false
+  if (previousNormalized === nextNormalized) return true
+  if (previousNormalized.includes(nextNormalized)) return true
+  if (nextNormalized.includes(previousNormalized)) return true
+  return false
+}
+
+function normalizeAssistantTextForDedup(text: string): string {
+  return text
+    .replace(/\[\[reply_to:[^\]]*\]\]\s*/gi, '')
+    .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function extractChatPayloadsFromAgentPayload(

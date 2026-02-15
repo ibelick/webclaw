@@ -174,12 +174,19 @@ function mergeStreamingHistoryMessages(
 
       const streamingText = textFromMessage(streamingMessage)
       const serverText = textFromMessage(serverMessage)
-      if (
-        streamingText &&
-        streamingText !== serverText &&
-        !serverText.startsWith(streamingText)
-      ) {
-        return false
+      if (streamingText && streamingText !== serverText) {
+        const normalizedStreamingText = normalizeAssistantTextForDedup(streamingText)
+        const normalizedServerText = normalizeAssistantTextForDedup(serverText)
+        const textLikelySameResponse =
+          normalizedStreamingText.length > 0 &&
+          normalizedServerText.length > 0 &&
+          (normalizedStreamingText === normalizedServerText ||
+            normalizedStreamingText.includes(normalizedServerText) ||
+            normalizedServerText.includes(normalizedStreamingText))
+
+        if (!textLikelySameResponse && !serverText.startsWith(streamingText)) {
+          return false
+        }
       }
 
       return messageCoversStreamingMessage(serverMessage, streamingMessage)
@@ -224,6 +231,14 @@ function nonTextPartSignatures(message: GatewayMessage): Set<string> {
   return signatures
 }
 
+function normalizeAssistantTextForDedup(text: string): string {
+  return text
+    .replace(/\[\[reply_to:[^\]]*\]\]\s*/gi, '')
+    .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function mergeOptimisticHistoryMessages(
   serverMessages: Array<GatewayMessage>,
   optimisticMessages: Array<GatewayMessage>,
@@ -232,7 +247,7 @@ function mergeOptimisticHistoryMessages(
 
   const merged = [...serverMessages]
   for (const optimisticMessage of optimisticMessages) {
-    const hasMatch = serverMessages.some((serverMessage) => {
+    const hasMatch = merged.some((serverMessage) => {
       if (
         optimisticMessage.clientId &&
         serverMessage.clientId &&

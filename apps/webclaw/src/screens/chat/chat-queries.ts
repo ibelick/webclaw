@@ -1,4 +1,4 @@
-import { normalizeSessions, readError } from './utils'
+import { getMessageTimestamp, normalizeSessions, readError } from './utils'
 import type { QueryClient } from '@tanstack/react-query'
 import type {
   GatewayMessage,
@@ -162,7 +162,7 @@ export function moveHistoryMessages(
 ) {
   const fromKey = chatQueryKeys.history(fromFriendlyId, fromSessionKey)
   const toKey = chatQueryKeys.history(toFriendlyId, toSessionKey)
-  const fromData = queryClient.getQueryData(fromKey)
+  const fromData = queryClient.getQueryData<HistoryResponse>(fromKey)
   if (!fromData) return
   const messages = Array.isArray(fromData.messages) ? fromData.messages : []
   queryClient.setQueryData(toKey, {
@@ -179,18 +179,37 @@ export function updateSessionLastMessage(
   friendlyId: string,
   message: GatewayMessage,
 ) {
+  const messageUpdatedAt = getMessageTimestamp(message)
   queryClient.setQueryData(
     chatQueryKeys.sessions,
     function update(messages: unknown) {
       if (!Array.isArray(messages)) return messages
-      return (messages as Array<SessionMeta>).map((session) => {
+      const nextSessions = (messages as Array<SessionMeta>).map((session) => {
         if (session.key !== sessionKey && session.friendlyId !== friendlyId) {
           return session
         }
         return {
           ...session,
           lastMessage: message,
+          updatedAt:
+            typeof session.updatedAt === 'number' &&
+            Number.isFinite(session.updatedAt) &&
+            session.updatedAt > messageUpdatedAt
+              ? session.updatedAt
+              : messageUpdatedAt,
         }
+      })
+
+      return [...nextSessions].sort((a, b) => {
+        const aUpdatedAt =
+          typeof a.updatedAt === 'number' && Number.isFinite(a.updatedAt)
+            ? a.updatedAt
+            : 0
+        const bUpdatedAt =
+          typeof b.updatedAt === 'number' && Number.isFinite(b.updatedAt)
+            ? b.updatedAt
+            : 0
+        return bUpdatedAt - aUpdatedAt
       })
     },
   )
