@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   PencilEdit02Icon,
+  QuestionMarkIcon,
   Search01Icon,
   Settings01Icon,
   SidebarLeft01Icon,
@@ -13,6 +14,7 @@ import { useDeleteSession } from '../hooks/use-delete-session'
 import { useRenameSession } from '../hooks/use-rename-session'
 import { useSessionShortcuts } from '../hooks/use-session-shortcuts'
 import { SettingsDialog } from './settings-dialog'
+import { KeyboardShortcutsDialog } from './keyboard-shortcuts-dialog'
 import { SessionRenameDialog } from './sidebar/session-rename-dialog'
 import { SessionDeleteDialog } from './sidebar/session-delete-dialog'
 import { SidebarSessions } from './sidebar/sidebar-sessions'
@@ -76,6 +78,7 @@ function ChatSidebarComponent({
   const [deleteFriendlyId, setDeleteFriendlyId] = useState<string | null>(null)
   const [deleteSessionTitle, setDeleteSessionTitle] = useState('')
   const [searchDialogOpen, setSearchDialogOpen] = useState(false)
+  const [shortcutsDialogOpen, setShortcutsDialogOpen] = useState(false)
   const navigate = useNavigate()
 
   useSessionShortcuts({
@@ -344,6 +347,39 @@ function ChatSidebarComponent({
             </AnimatePresence>
           </Button>
         </motion.div>
+        <motion.div
+          layout
+          transition={{ layout: transition }}
+          className="w-full mt-1"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShortcutsDialogOpen(true)}
+            title={isCollapsed ? 'Keyboard shortcuts' : undefined}
+            className="w-full justify-start pl-1.5"
+          >
+            <HugeiconsIcon
+              icon={QuestionMarkIcon}
+              size={20}
+              strokeWidth={1.5}
+              className="min-w-5"
+            />
+            <AnimatePresence initial={false} mode="wait">
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Shortcuts
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Button>
+        </motion.div>
       </div>
 
       <SettingsDialog
@@ -355,6 +391,11 @@ function ChatSidebarComponent({
         onClose={closeSettings}
         onCopySessionsDir={copySessionsDir}
         onCopyStorePath={copyStorePath}
+      />
+
+      <KeyboardShortcutsDialog
+        open={shortcutsDialogOpen}
+        onOpenChange={setShortcutsDialogOpen}
       />
 
       <SessionRenameDialog
