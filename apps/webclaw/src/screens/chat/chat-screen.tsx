@@ -45,7 +45,7 @@ import type { AttachmentFile } from '@/components/attachment-button'
 import type { ChatComposerHelpers } from './components/chat-composer'
 import { useExport } from '@/hooks/use-export'
 import { useChatSettings } from '@/hooks/use-chat-settings'
-import { cn } from '@/lib/utils'
+import { cn, randomUUID } from '@/lib/utils'
 
 type ChatScreenProps = {
   activeFriendlyId: string
@@ -269,7 +269,7 @@ export function ChatScreen({
         friendlyId,
         message: body,
         thinking: settings.thinkingLevel,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: randomUUID(),
         attachments: attachmentsPayload,
       }),
     })
