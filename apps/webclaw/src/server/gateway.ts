@@ -772,3 +772,44 @@ export async function gatewayConnectCheck(): Promise<void> {
     }
   }
 }
+
+/**
+ * Test a gateway connection with user-provided credentials.
+ * Used by the connect screen to validate settings before the user
+ * saves them to .env.local.
+ */
+export async function gatewayConnectTest(
+  url: string,
+  token: string,
+  password: string,
+): Promise<void> {
+  if (!token && !password) {
+    throw new Error('Provide a token or password.')
+  }
+
+  const ws = new WebSocket(url)
+  try {
+    await wsOpen(ws)
+
+    const connectId = randomUUID()
+    const connectParams = buildConnectParams(token, password)
+    const connectReq: GatewayFrame = {
+      type: 'req',
+      id: connectId,
+      method: 'connect',
+      params: connectParams,
+    }
+
+    const waiter = createGatewayWaiter()
+    ws.addEventListener('message', waiter.handleMessage)
+    ws.send(JSON.stringify(connectReq))
+    await waiter.waitForRes(connectId)
+    ws.removeEventListener('message', waiter.handleMessage)
+  } finally {
+    try {
+      await wsClose(ws)
+    } catch {
+      // ignore
+    }
+  }
+}
