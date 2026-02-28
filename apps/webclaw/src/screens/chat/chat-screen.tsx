@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  deriveAgentIdFromKey,
   deriveFriendlyIdFromKey,
   isMissingGatewayAuth,
   isSessionNotFound,
@@ -13,6 +14,7 @@ import {
   appendHistoryMessage,
   chatQueryKeys,
   clearHistoryMessages,
+  fetchAgents,
   fetchGatewayStatus,
   removeHistoryMessageByClientId,
   updateHistoryMessageByClientId,
@@ -68,6 +70,7 @@ export function ChatScreen({
   const [sending, setSending] = useState(false)
   const [creatingSession, setCreatingSession] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [selectedAgentId, setSelectedAgentId] = useState('main')
   const { headerRef, composerRef, mainRef, pinGroupMinHeight, headerHeight } =
     useChatMeasurements()
   const [waitingForResponse, setWaitingForResponse] = useState(
@@ -123,6 +126,33 @@ export function ChatScreen({
     },
     staleTime: Infinity,
   })
+  
+  const agentsQuery = useQuery({
+    queryKey: chatQueryKeys.agents,
+    queryFn: fetchAgents,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Set the correct agent ID for the current context
+  const currentAgentId = useMemo(() => {
+    if (isNewChat) return selectedAgentId
+    return deriveAgentIdFromKey(activeCanonicalKey) || 'main'
+  }, [isNewChat, selectedAgentId, activeCanonicalKey])
+
+  const defaultAgentIdAppliedRef = useRef(false)
+  useEffect(() => {
+    if (defaultAgentIdAppliedRef.current) return
+    const data = agentsQuery.data
+    if (!data) return
+    defaultAgentIdAppliedRef.current = true
+    const { agents, defaultAgentId } = data
+    const matched = agents.some((agent) => agent.id === defaultAgentId)
+    if (matched) {
+      setSelectedAgentId(defaultAgentId)
+    } else if (agents.length > 0) {
+      setSelectedAgentId(agents[0].id)
+    }
+  }, [agentsQuery.data])
   const gatewayStatusQuery = useQuery({
     queryKey: ['gateway', 'status'],
     queryFn: fetchGatewayStatus,
@@ -318,7 +348,7 @@ export function ChatScreen({
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ agentId: selectedAgentId }),
       })
       if (!res.ok) throw new Error(await readError(res))
 
@@ -343,7 +373,7 @@ export function ChatScreen({
     } finally {
       setCreatingSession(false)
     }
-  }, [queryClient])
+  }, [queryClient, selectedAgentId])
 
   const send = useCallback(
     (body: string, helpers: ChatComposerHelpers) => {
@@ -596,6 +626,10 @@ export function ChatScreen({
             showExport={!isNewChat}
             usedTokens={activeSession?.totalTokens}
             maxTokens={activeSession?.contextTokens}
+            isNewChat={isNewChat}
+            agents={agentsQuery.data?.agents}
+            selectedAgentId={currentAgentId}
+            onSelectAgent={setSelectedAgentId}
           />
 
           {hideUi ? null : (

@@ -19,6 +19,7 @@ import { Route as ApiSendRouteImport } from './routes/api/send'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as ApiPathsRouteImport } from './routes/api/paths'
 import { Route as ApiHistoryRouteImport } from './routes/api/history'
+import { Route as ApiAgentsRouteImport } from './routes/api/agents'
 
 const NewRoute = NewRouteImport.update({
   id: '/new',
@@ -70,11 +71,17 @@ const ApiHistoryRoute = ApiHistoryRouteImport.update({
   path: '/api/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentsRoute = ApiAgentsRouteImport.update({
+  id: '/api/agents',
+  path: '/api/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
+  '/api/agents': typeof ApiAgentsRoute
   '/api/history': typeof ApiHistoryRoute
   '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
+  '/api/agents': typeof ApiAgentsRoute
   '/api/history': typeof ApiHistoryRoute
   '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
   '/new': typeof NewRoute
+  '/api/agents': typeof ApiAgentsRoute
   '/api/history': typeof ApiHistoryRoute
   '/api/paths': typeof ApiPathsRoute
   '/api/ping': typeof ApiPingRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/connect'
     | '/new'
+    | '/api/agents'
     | '/api/history'
     | '/api/paths'
     | '/api/ping'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/connect'
     | '/new'
+    | '/api/agents'
     | '/api/history'
     | '/api/paths'
     | '/api/ping'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/connect'
     | '/new'
+    | '/api/agents'
     | '/api/history'
     | '/api/paths'
     | '/api/ping'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConnectRoute: typeof ConnectRoute
   NewRoute: typeof NewRoute
+  ApiAgentsRoute: typeof ApiAgentsRoute
   ApiHistoryRoute: typeof ApiHistoryRoute
   ApiPathsRoute: typeof ApiPathsRoute
   ApiPingRoute: typeof ApiPingRoute
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agents': {
+      id: '/api/agents'
+      path: '/api/agents'
+      fullPath: '/api/agents'
+      preLoaderRoute: typeof ApiAgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnectRoute: ConnectRoute,
   NewRoute: NewRoute,
+  ApiAgentsRoute: ApiAgentsRoute,
   ApiHistoryRoute: ApiHistoryRoute,
   ApiPathsRoute: ApiPathsRoute,
   ApiPingRoute: ApiPingRoute,

@@ -15,6 +15,19 @@ export function deriveFriendlyIdFromKey(key: string | undefined): string {
   return tailTrimmed.length > 0 ? tailTrimmed : trimmed
 }
 
+export function deriveAgentIdFromKey(key: string | undefined): string | null {
+  if (!key) return null
+  const trimmed = key.trim()
+  if (trimmed.length === 0) return null
+  const parts = trimmed.split(':')
+  // format is typically agent:<agentId>:<uuid>
+  if (parts.length >= 3 && parts[0] === 'agent') {
+    const agentId = parts[1]
+    return agentId && agentId.trim().length > 0 ? agentId.trim() : null
+  }
+  return null
+}
+
 export function textFromMessage(msg: GatewayMessage): string {
   const parts = Array.isArray(msg.content) ? msg.content : []
   return parts

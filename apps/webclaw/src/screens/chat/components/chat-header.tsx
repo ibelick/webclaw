@@ -17,6 +17,10 @@ type ChatHeaderProps = {
   onExport: (format: ExportFormat) => void
   exportDisabled?: boolean
   showExport?: boolean
+  isNewChat?: boolean
+  agents?: Array<{ id: string; name: string }>
+  selectedAgentId?: string
+  onSelectAgent?: (id: string) => void
 }
 
 function ChatHeaderComponent({
@@ -29,6 +33,10 @@ function ChatHeaderComponent({
   onExport,
   exportDisabled = false,
   showExport = true,
+  isNewChat = false,
+  agents = [],
+  selectedAgentId,
+  onSelectAgent,
 }: ChatHeaderProps) {
   return (
     <div
@@ -46,8 +54,29 @@ function ChatHeaderComponent({
           <HugeiconsIcon icon={Menu01Icon} size={18} strokeWidth={1.6} />
         </Button>
       ) : null}
-      <div className="flex-1 min-w-0 text-sm font-medium truncate">
+      <div className="flex-1 min-w-0 text-sm font-medium truncate flex items-center gap-3">
         {activeTitle}
+        {isNewChat && agents.length > 0 ? (
+          <label className="flex items-center gap-1.5 text-xs text-primary-600 shrink-0">
+            Agent
+            <select
+              value={selectedAgentId}
+              onChange={(e) => onSelectAgent?.(e.target.value)}
+              className="text-xs bg-surface border border-primary-200 rounded px-2 py-1 text-primary-900 outline-none focus:border-primary-400"
+              aria-label="Select an agent"
+            >
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : !isNewChat && selectedAgentId ? (
+          <span className="text-xs text-primary-500 font-normal shrink-0">
+            Agent: {agents.find((a) => a.id === selectedAgentId)?.name || selectedAgentId}
+          </span>
+        ) : null}
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {showExport ? (

@@ -93,9 +93,14 @@ export const Route = createFileRoute('/api/sessions')({
             typeof body.label === 'string' ? body.label.trim() : ''
           const label = requestedLabel || undefined
 
-          const friendlyId = randomUUID()
+          const requestedAgentId =
+            typeof body.agentId === 'string' ? body.agentId.trim() : ''
+          const agentId = requestedAgentId || 'main'
 
-          const params: Record<string, unknown> = { key: friendlyId }
+          const friendlyId = randomUUID()
+          const sessionKey = `agent:${agentId}:${friendlyId}`
+
+          const params: Record<string, unknown> = { key: sessionKey }
           if (label) params.label = label
 
           const payload = await gatewayRpc<SessionsPatchResponse>(
@@ -103,12 +108,12 @@ export const Route = createFileRoute('/api/sessions')({
             params,
           )
 
-          const sessionKeyRaw = payload.key
-          const sessionKey =
-            typeof sessionKeyRaw === 'string' && sessionKeyRaw.trim().length > 0
-              ? sessionKeyRaw.trim()
-              : ''
-          if (sessionKey.length === 0) {
+          const responseKey = payload.key
+          const resolvedSessionKey =
+            typeof responseKey === 'string' && responseKey.trim().length > 0
+              ? responseKey.trim()
+              : sessionKey
+          if (resolvedSessionKey.length === 0) {
             throw new Error('gateway returned an invalid response')
           }
 
@@ -121,7 +126,7 @@ export const Route = createFileRoute('/api/sessions')({
 
           return json({
             ok: true,
-            sessionKey,
+            sessionKey: resolvedSessionKey,
             friendlyId,
             entry: payload.entry,
           })
