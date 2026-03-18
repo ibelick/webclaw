@@ -14,6 +14,7 @@ type GatewayStatusResponse = {
 
 export const chatQueryKeys = {
   sessions: ['chat', 'sessions'] as const,
+  agents: ['chat', 'agents'] as const,
   history: function history(friendlyId: string, sessionKey: string) {
     return ['chat', 'history', friendlyId, sessionKey] as const
   },
@@ -54,6 +55,31 @@ export async function fetchGatewayStatus(): Promise<GatewayStatusResponse> {
   } finally {
     window.clearTimeout(timeout)
   }
+}
+
+type AgentsResult = {
+  agents: Array<{ id: string; name: string }>
+  defaultAgentId: string
+}
+
+export async function fetchAgents(): Promise<AgentsResult> {
+  const res = await fetch('/api/agents')
+  if (!res.ok) throw new Error(await readError(res))
+  const data = await res.json() as {
+    agents?: Array<{ id: string; name?: string }>
+    defaultAgentId?: string
+  }
+  const agents = Array.isArray(data.agents)
+    ? data.agents.map((agent) => ({
+        id: agent.id,
+        name: agent.name || agent.id,
+      }))
+    : []
+  const defaultAgentId =
+    typeof data.defaultAgentId === 'string' && data.defaultAgentId.trim().length > 0
+      ? data.defaultAgentId.trim()
+      : 'main'
+  return { agents, defaultAgentId }
 }
 
 export function updateHistoryMessages(
