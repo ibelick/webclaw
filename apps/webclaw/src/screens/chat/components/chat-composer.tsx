@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowUp02Icon } from '@hugeicons/core-free-icons'
-import type { Ref } from 'react'
+import type { Ref, RefObject } from 'react'
 
 import type { AttachmentFile } from '@/components/attachment-button'
 import {
@@ -21,6 +21,7 @@ type ChatComposerProps = {
   isLoading: boolean
   disabled: boolean
   wrapperRef?: Ref<HTMLDivElement>
+  apiRef?: RefObject<ChatComposerApi | null>
 }
 
 type ChatComposerHelpers = {
@@ -29,11 +30,17 @@ type ChatComposerHelpers = {
   attachments?: Array<AttachmentFile>
 }
 
+type ChatComposerApi = {
+  setValue: (value: string) => void
+  appendToPrompt: (markdown: string) => void
+}
+
 function ChatComposerComponent({
   onSubmit,
   isLoading,
   disabled,
   wrapperRef,
+  apiRef,
 }: ChatComposerProps) {
   const [attachments, setAttachments] = useState<Array<AttachmentFile>>([])
   const promptRef = useRef<HTMLTextAreaElement | null>(null)
@@ -80,6 +87,23 @@ function ChatComposerComponent({
     },
     [focusPrompt],
   )
+  const appendToPrompt = useCallback(
+    (markdown: string) => {
+      const trimmedMarkdown = markdown.trim()
+      if (trimmedMarkdown.length === 0) return
+      const current = valueRef.current.trimEnd()
+      const nextValue =
+        current.length > 0 ? `${current}\n\n${trimmedMarkdown}` : trimmedMarkdown
+      setComposerValue(nextValue)
+    },
+    [setComposerValue],
+  )
+  if (apiRef) {
+    apiRef.current = {
+      setValue: setComposerValue,
+      appendToPrompt,
+    }
+  }
   const handleSubmit = useCallback(() => {
     if (disabled) return
     const body = valueRef.current.trim()
@@ -165,4 +189,4 @@ function ChatComposerComponent({
 const MemoizedChatComposer = memo(ChatComposerComponent)
 
 export { MemoizedChatComposer as ChatComposer }
-export type { ChatComposerHelpers }
+export type { ChatComposerApi, ChatComposerHelpers }

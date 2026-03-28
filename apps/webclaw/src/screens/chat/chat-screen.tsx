@@ -24,6 +24,7 @@ import { ChatHeader } from './components/chat-header'
 import { ChatMessageList } from './components/chat-message-list'
 import { ChatComposer } from './components/chat-composer'
 import { GatewayStatusMessage } from './components/gateway-status-message'
+import { ChatWorkbench } from './components/chat-workbench'
 import {
   hasPendingGeneration,
   hasPendingSend,
@@ -42,7 +43,10 @@ import { useChatGenerationGuard } from './hooks/use-chat-generation-guard'
 import { shouldRedirectToConnect } from './hooks/use-chat-error-state'
 import { useChatRedirect } from './hooks/use-chat-redirect'
 import type { AttachmentFile } from '@/components/attachment-button'
-import type { ChatComposerHelpers } from './components/chat-composer'
+import type {
+  ChatComposerApi,
+  ChatComposerHelpers,
+} from './components/chat-composer'
 import { useExport } from '@/hooks/use-export'
 import { useChatSettings } from '@/hooks/use-chat-settings'
 import { cn, randomUUID } from '@/lib/utils'
@@ -68,8 +72,15 @@ export function ChatScreen({
   const [sending, setSending] = useState(false)
   const [creatingSession, setCreatingSession] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
-  const { headerRef, composerRef, mainRef, pinGroupMinHeight, headerHeight } =
-    useChatMeasurements()
+  const composerApiRef = useRef<ChatComposerApi | null>(null)
+  const {
+    headerRef,
+    composerRef,
+    workbenchRef,
+    mainRef,
+    pinGroupMinHeight,
+    headerHeight,
+  } = useChatMeasurements()
   const [waitingForResponse, setWaitingForResponse] = useState(
     () => hasPendingSend() || hasPendingGeneration(),
   )
@@ -465,6 +476,11 @@ export function ChatScreen({
     gatewayStatusError,
   })
   const historyEmpty = !historyLoading && displayMessages.length === 0
+  const workbenchSessionKey =
+    activeCanonicalKey || sessionKeyForHistory || activeFriendlyId || 'new'
+  const handleInsertPromptFromBlock = useCallback((markdown: string) => {
+    composerApiRef.current?.appendToPrompt(markdown)
+  }, [])
   const gatewayNotice = useMemo(() => {
     if (!showGatewayNotice) return null
     if (!gatewayError) return null
@@ -613,11 +629,17 @@ export function ChatScreen({
                 headerHeight={headerHeight}
                 contentStyle={stableContentStyle}
               />
+              <ChatWorkbench
+                sessionKey={workbenchSessionKey}
+                onInsertToPrompt={handleInsertPromptFromBlock}
+                wrapperRef={workbenchRef}
+              />
               <ChatComposer
                 onSubmit={send}
                 isLoading={sending}
                 disabled={sending}
                 wrapperRef={composerRef}
+                apiRef={composerApiRef}
               />
             </>
           )}
